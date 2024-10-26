@@ -25,6 +25,10 @@ def harris_corner_detection(
     threshold_value = threshold * harris_response.max()
     corners = np.argwhere(harris_response > threshold_value)
     """
+    # 产生一大堆角点的原因出现在这里：因为取的0.01倍最大值，而Harris算子是通过计算导数特征值的方式求解的，所以只要阈值0.01不够大，就会出现很多个点。如果你要只留一个值，也可以在这里改成：
+    # corners = np.argmax(dst)
+    # 只求一个最大值，但是这会导致计算精度下降，实际上可以把求出来的全部角点求一个平均就好了，如下
+    # corners = np.mean(np.argwhere(dst > 0.01 * dst.max()), axis=0)
     corners = np.argwhere(dst > 0.01 * dst.max())
     return image, gray, corners
 
@@ -75,8 +79,9 @@ def refine_subpixel_location(gray, corners):
         subpixel_y = y + delta_p[1]
 
         refined_corners.append((subpixel_x, subpixel_y))
-
-    return np.mean(refined_corners, axis=0)
+    # 要只留下一个角点，可以把它们求个平均
+    # 当然也可以在这里平均
+    return refined_corners
 
 
 def main(image_path):
@@ -104,6 +109,7 @@ def main(image_path):
     # 输出亚像素级别的角点坐标
     print("Refined Corners:")
     for refined_corner in refined_corners:
+        # 平均完了这里注意要修改
         x, y = refined_corner
         print(f"({x:.3f}, {y:.3f})")
 
